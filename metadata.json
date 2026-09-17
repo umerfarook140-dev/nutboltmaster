@@ -1,0 +1,7 @@
+{
+  "name": "NutBolt Master 3D",
+  "description": "A vibrant 3D screw and bolt puzzle game where players unscrew wooden and metal plates, match colors in the tray, and clear boards.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

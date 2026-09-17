@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">NutBolt Master 3D</string>
+    <string name="google_app_id" translatable="false">1:770214812828:android:com_aistudio_nutbolt_qkrm</string>
+    <string name="gcm_defaultSenderId" translatable="false">770214812828</string>
+    <string name="project_id" translatable="false">ais-applet-project</string>
+</resources>
+
