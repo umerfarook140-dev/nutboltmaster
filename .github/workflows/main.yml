@@ -29,7 +29,6 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      # Auto-detect Android project directory
       - name: Find Android Project Directory
         run: |
           BUILD_FILE=$(find . -name "build.gradle" -o -name "build.gradle.kts" | head -n 1)
@@ -40,7 +39,13 @@ jobs:
           PROJECT_DIR=$(dirname "$BUILD_FILE")
           echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
 
-      # Build APK using system installed gradle
+      # FIX: Generate missing debug.keystore file
+      - name: Create Dummy Debug Keystore
+        run: |
+          keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          # App subfolder aur root dono jagah copy kardein taaki build/config fail na ho
+          cp debug.keystore "${{ env.PROJECT_DIR }}/debug.keystore" || true
+
       - name: Build Debug APK
         run: |
           cd "${{ env.PROJECT_DIR }}"
