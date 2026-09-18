@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ad-services-config>
+    <!-- Configures Privacy Sandbox Ad Services attributes for Google Mobile Ads SDK -->
+    <attribution allowAdPartnersToBind="false" />
+    <custom-audiences allowAdPartnersToBind="false" />
+    <protected-signals allowAdPartnersToBind="false" />
+</ad-services-config>
+

@@ -117,6 +117,20 @@ fun Board3DRenderer(
                     // 4. Draw Screws that are in holes
                     for (screw in uiState.screws) {
                         if (screw.state == ScrewState.IN_HOLE || screw.state == ScrewState.UNSCREWING) {
+                            // If hint active for this screw, draw a glowing beacon ring
+                            if (uiState.hintScrewId == screw.id) {
+                                drawCircle(
+                                    color = Color(0xFFFBBF24).copy(alpha = 0.5f),
+                                    radius = 28f,
+                                    center = screw.currentPosition
+                                )
+                                drawCircle(
+                                    color = Color(0xFFF59E0B),
+                                    radius = 22f,
+                                    center = screw.currentPosition,
+                                    style = Stroke(width = 3.5f)
+                                )
+                            }
                             drawScrew(screw)
                         }
                     }

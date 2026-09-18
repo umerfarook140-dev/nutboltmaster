@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
+import com.example.ads.AdMobBanner
 import com.example.data.GamePreferences
 
 @Composable
@@ -290,6 +291,17 @@ fun MainMenuScreen(
                     letterSpacing = 1.sp
                 )
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // Bottom Banner Ad (does not cover buttons or interactive elements)
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+        ) {
+            AdMobBanner()
         }
     }
 }

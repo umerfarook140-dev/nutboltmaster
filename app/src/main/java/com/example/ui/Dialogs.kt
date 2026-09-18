@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.VolumeMute
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -154,6 +155,7 @@ fun PauseDialog(
 @Composable
 fun GameOverDialog(
     score: Int,
+    onWatchAdToContinue: () -> Unit,
     onRestart: () -> Unit,
     onMainMenu: () -> Unit
 ) {
@@ -173,13 +175,13 @@ fun GameOverDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(28.dp),
+                    .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Warning icon circle
                 Box(
                     modifier = Modifier
-                        .size(68.dp)
+                        .size(64.dp)
                         .background(Color(0x33EF4444), CircleShape)
                         .border(2.dp, Color(0xFFEF4444), CircleShape),
                     contentAlignment = Alignment.Center
@@ -188,68 +190,85 @@ fun GameOverDialog(
                         Icons.Default.Close,
                         contentDescription = null,
                         tint = Color(0xFFEF4444),
-                        modifier = Modifier.size(38.dp)
+                        modifier = Modifier.size(36.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 Text(
                     text = "NO MORE MOVES",
-                    fontSize = 26.sp,
+                    fontSize = 24.sp,
                     fontWeight = FontWeight.Black,
                     color = Color(0xFFEF4444),
                     letterSpacing = 1.sp
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = "The screw tray is completely full! Try removing screws in a different color order.",
-                    fontSize = 14.sp,
+                    text = "The screw tray is full! Watch a short ad to clear 3 slots and keep playing.",
+                    fontSize = 13.sp,
                     color = Color(0xFFCBD5E1),
                     textAlign = TextAlign.Center,
-                    lineHeight = 20.sp
+                    lineHeight = 18.sp
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
                     text = "Score: $score",
-                    fontSize = 18.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFFFBBF24)
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Watch Ad to Continue Button
+                Button(
+                    onClick = onWatchAdToContinue,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .testTag("game_over_continue_ad_button"),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
+                ) {
+                    Icon(Icons.Default.VideoLibrary, contentDescription = null, modifier = Modifier.size(22.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("WATCH AD TO CONTINUE", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.White)
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Button(
                     onClick = onRestart,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(54.dp)
+                        .height(48.dp)
                         .testTag("game_over_restart_button"),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B))
                 ) {
-                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(24.dp))
+                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("TRY AGAIN", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black)
+                    Text("TRY AGAIN", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.Black)
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 OutlinedButton(
                     onClick = onMainMenu,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(54.dp)
+                        .height(48.dp)
                         .testTag("game_over_menu_button"),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF94A3B8)),
                     border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFF475569))
                 ) {
-                    Text("MAIN MENU", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("MAIN MENU", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 }
             }
         }

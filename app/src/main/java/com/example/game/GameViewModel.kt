@@ -51,7 +51,8 @@ data class GameUiState(
     val isGameOver: Boolean = false,
     val isLevelComplete: Boolean = false,
     val starsEarned: Int = 0,
-    val isAnimating: Boolean = false
+    val isAnimating: Boolean = false,
+    val hintScrewId: Int? = null
 )
 
 class GameViewModel(application: Application) : AndroidViewModel(application) {
@@ -510,6 +511,95 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 delay(16)
             }
         }
+    }
+
+    // --- Rewarded Ad In-Game Actions ---
+
+    /**
+     * "Watch Ad for Hint" Reward Callback:
+     * Highlights an optimal playable screw that matches existing tray screws, or frees a plate.
+     */
+    fun applyHintReward() {
+        val state = _uiState.value
+        val boardScrews = state.screws.filter { it.state == ScrewState.IN_HOLE }
+        if (boardScrews.isEmpty()) return
+
+        // Prefer finding a screw that matches colors already in the tray
+        val trayColors = state.traySlots.mapNotNull { it.color }
+        val matchingScrew = boardScrews.find { it.color in trayColors } ?: boardScrews.firstOrNull()
+
+        if (matchingScrew != null) {
+            _uiState.update { it.copy(hintScrewId = matchingScrew.id) }
+            addFloatingText("HINT!", matchingScrew.currentPosition.x, matchingScrew.currentPosition.y - 20f, Color(0xFFFBBF24))
+
+            // Remove hint highlight after 5 seconds
+            viewModelScope.launch {
+                delay(5000)
+                _uiState.update { if (it.hintScrewId == matchingScrew.id) it.copy(hintScrewId = null) else it }
+            }
+        }
+    }
+
+    /**
+     * "Watch Ad for Extra Move / Tray Space" Reward Callback:
+     * Clears one non-matching screw from tray back into board or empties 2 tray slots
+     * giving the player breathing room and extra moves.
+     */
+    fun applyExtraMoveReward() {
+        val state = _uiState.value
+        val filledSlots = state.traySlots.filter { it.screwId != null }
+        if (filledSlots.isNotEmpty()) {
+            // Free the last 2 occupied slots in the tray to give the player breathing room
+            val slotsToFree = filledSlots.takeLast(2).map { it.index }.toSet()
+            val freedScrewIds = filledSlots.filter { it.index in slotsToFree }.mapNotNull { it.screwId }
+
+            _uiState.update { cur ->
+                val newSlots = cur.traySlots.map { slot ->
+                    if (slot.index in slotsToFree) TraySlot(index = slot.index) else slot
+                }
+                val newScrews = cur.screws.map {
+                    if (it.id in freedScrewIds) it.copy(state = ScrewState.MATCHED) else it
+                }
+                cur.copy(
+                    traySlots = newSlots,
+                    screws = newScrews,
+                    isGameOver = false
+                )
+            }
+            soundManager.playMatch()
+            addFloatingText("+2 SLOTS FREED!", 200f, 440f, Color(0xFF10B981))
+        } else {
+            // If tray was not full, add bonus coins / moves
+            prefs.addCoins(25)
+            _uiState.update { it.copy(coins = prefs.totalCoins) }
+            addFloatingText("+25 COINS!", 200f, 440f, Color(0xFFFBBF24))
+        }
+    }
+
+    /**
+     * "Watch Ad to Continue" Reward Callback:
+     * When Game Over occurs, clears up to 3 slots in the tray to resume gameplay seamlessly.
+     */
+    fun applyContinueReward() {
+        _uiState.update { cur ->
+            // Clear 3 slots so player can keep solving
+            val slotsToClear = cur.traySlots.take(3).map { it.index }.toSet()
+            val clearedScrewIds = cur.traySlots.filter { it.index in slotsToClear }.mapNotNull { it.screwId }
+
+            val newSlots = cur.traySlots.map { slot ->
+                if (slot.index in slotsToClear) TraySlot(index = slot.index) else slot
+            }
+            val newScrews = cur.screws.map {
+                if (it.id in clearedScrewIds) it.copy(state = ScrewState.MATCHED) else it
+            }
+            cur.copy(
+                traySlots = newSlots,
+                screws = newScrews,
+                isGameOver = false
+            )
+        }
+        soundManager.playClick()
+        addFloatingText("CONTINUED!", 200f, 440f, Color(0xFF10B981))
     }
 
     // --- Developer / Debug Methods ---

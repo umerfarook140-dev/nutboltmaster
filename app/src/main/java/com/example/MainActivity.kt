@@ -16,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ads.AdManager
 import com.example.game.GameViewModel
 import com.example.ui.DebugDialog
 import com.example.ui.GameScreen
@@ -34,6 +35,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // Initialize AdMob SDK and preload ads
+        AdManager.initialize(this)
+
         setContent {
             MyApplicationTheme(darkTheme = true, dynamicColor = false) {
                 Surface(

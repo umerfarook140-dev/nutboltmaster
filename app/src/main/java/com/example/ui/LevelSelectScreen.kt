@@ -41,6 +41,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ads.AdMobBanner
 import com.example.data.GamePreferences
 
 @Composable
@@ -113,10 +114,11 @@ fun LevelSelectScreen(
             columns = GridCells.Fixed(4),
             state = gridState,
             modifier = Modifier
-                .fillMaxSize()
+                .weight(1f)
+                .fillMaxWidth()
                 .padding(horizontal = 16.dp)
                 .testTag("level_select_grid"),
-            contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp),
+            contentPadding = PaddingValues(top = 8.dp, bottom = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -139,6 +141,9 @@ fun LevelSelectScreen(
                 )
             }
         }
+
+        // Bottom Banner Ad (does not cover grid or interactive controls)
+        AdMobBanner()
     }
 }
 

@@ -70,5 +70,30 @@ class ExampleRobolectricTest {
     prefs.addCoins(50)
     assertEquals(150, prefs.totalCoins)
   }
+
+  @Test
+  fun `test AdMob ad unit IDs and reward mechanisms`() {
+    // Official test unit IDs check
+    assertEquals("ca-app-pub-3940256099942544/6300978111", com.example.ads.AdManager.TEST_BANNER_AD_UNIT_ID)
+    assertEquals("ca-app-pub-3940256099942544/1033173712", com.example.ads.AdManager.TEST_INTERSTITIAL_AD_UNIT_ID)
+    assertEquals("ca-app-pub-3940256099942544/5224354917", com.example.ads.AdManager.TEST_REWARDED_AD_UNIT_ID)
+
+    // Test ViewModel rewards
+    val app = ApplicationProvider.getApplicationContext<android.app.Application>()
+    val vm = com.example.game.GameViewModel(app)
+
+    // 1. Hint reward test
+    vm.applyHintReward()
+    assertNotNull("Hint screw ID should be selected", vm.uiState.value.hintScrewId)
+
+    // 2. Extra move reward test
+    val initialCoins = vm.uiState.value.coins
+    vm.applyExtraMoveReward()
+    assertTrue(vm.uiState.value.coins >= initialCoins)
+
+    // 3. Continue reward test
+    vm.applyContinueReward()
+    assertEquals(false, vm.uiState.value.isGameOver)
+  }
 }
 

@@ -1,7 +1,9 @@
 package com.example.ui
 
+import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,10 +21,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.MonetizationOn
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -37,11 +42,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ads.AdManager
 import com.example.game.GameViewModel
 
 @Composable
@@ -49,6 +56,8 @@ fun GameScreen(
     viewModel: GameViewModel,
     onBackToMenu: () -> Unit
 ) {
+    val context = LocalContext.current
+    val activity = context as? Activity
     val uiState by viewModel.uiState.collectAsState()
     var showDebugDialog by remember { mutableStateOf(false) }
     var trayPositions by remember { mutableStateOf<List<Offset>>(emptyList()) }
@@ -82,7 +91,7 @@ fun GameScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 4.dp),
+                            .padding(horizontal = 24.dp, vertical = 2.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -111,6 +120,56 @@ fun GameScreen(
                     }
                 )
             }
+
+            // Rewarded Ad Boosters Bar (Watch Ad for Hint / Watch Ad for Extra Move)
+            // Clean, non-intrusive action bar positioned below the board
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Booster 1: Watch Ad for Hint
+                BoosterButton(
+                    icon = Icons.Default.Lightbulb,
+                    title = "Hint",
+                    badge = "Ad",
+                    tag = "booster_hint_button",
+                    onClick = {
+                        activity?.let { act ->
+                            AdManager.showRewardedAd(
+                                activity = act,
+                                onUserEarnedReward = {
+                                    viewModel.applyHintReward()
+                                }
+                            )
+                        } ?: run {
+                            viewModel.applyHintReward()
+                        }
+                    }
+                )
+
+                // Booster 2: Watch Ad for Extra Move / Free 2 Slots
+                BoosterButton(
+                    icon = Icons.Default.AutoAwesome,
+                    title = "Extra Move",
+                    badge = "Ad",
+                    tag = "booster_extra_move_button",
+                    onClick = {
+                        activity?.let { act ->
+                            AdManager.showRewardedAd(
+                                activity = act,
+                                onUserEarnedReward = {
+                                    viewModel.applyExtraMoveReward()
+                                }
+                            )
+                        } ?: run {
+                            viewModel.applyExtraMoveReward()
+                        }
+                    }
+                )
+            }
         }
 
         // --- Dialogs ---
@@ -131,6 +190,18 @@ fun GameScreen(
         if (uiState.isGameOver) {
             GameOverDialog(
                 score = uiState.score,
+                onWatchAdToContinue = {
+                    activity?.let { act ->
+                        AdManager.showRewardedAd(
+                            activity = act,
+                            onUserEarnedReward = {
+                                viewModel.applyContinueReward()
+                            }
+                        )
+                    } ?: run {
+                        viewModel.applyContinueReward()
+                    }
+                },
                 onRestart = { viewModel.restartLevel() },
                 onMainMenu = onBackToMenu
             )
@@ -143,7 +214,13 @@ fun GameScreen(
                 stars = uiState.starsEarned,
                 score = uiState.score,
                 coinsEarned = 50,
-                onNextLevel = { viewModel.nextLevel() },
+                onNextLevel = {
+                    activity?.let { act ->
+                        AdManager.onLevelCompleted(act) {
+                            viewModel.nextLevel()
+                        }
+                    } ?: viewModel.nextLevel()
+                },
                 onReplay = { viewModel.restartLevel() },
                 onMainMenu = onBackToMenu
             )
@@ -158,6 +235,52 @@ fun GameScreen(
                 onClearLevel = { viewModel.debugClearCurrentLevel() },
                 onResetAll = { viewModel.debugResetAllProgress() },
                 onDismiss = { showDebugDialog = false }
+            )
+        }
+    }
+}
+
+@Composable
+private fun BoosterButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    badge: String,
+    tag: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .background(Color(0xFF1E293B), RoundedCornerShape(16.dp))
+            .border(1.dp, Color(0xFF334155), RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .testTag(tag),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = title,
+            tint = Color(0xFFFBBF24),
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = title,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Box(
+            modifier = Modifier
+                .background(Color(0xFF10B981), RoundedCornerShape(6.dp))
+                .padding(horizontal = 5.dp, vertical = 1.dp)
+        ) {
+            Text(
+                text = badge,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Black,
+                color = Color.White
             )
         }
     }
