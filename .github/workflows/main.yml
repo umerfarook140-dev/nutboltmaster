@@ -1,20 +1,11 @@
-name: Build Android APK
-
-on:
-  push:
-    branches:
-      - main
-      - master
-  pull_request:
-    branches:
-      - main
-      - master
-  workflow_dispatch: # Isse aap GitHub Actions tab se manually bhi build run kar sakte hain
-
 jobs:
   build:
-    name: Build Debug and Release APK
     runs-on: ubuntu-latest
+    
+    # Agar aapka code kisi subfolder mein hai (e.g., 'android')
+    defaults:
+      run:
+        working-directory: ./android   # Apne folder ka naam yahan likhein
 
     steps:
       - name: Checkout Code
@@ -31,10 +22,4 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
-
-      - name: Upload Debug APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: NutBoltMaster3D-Debug-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+        run: ./gradlew assembleDebug
