@@ -1,11 +1,20 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
 jobs:
   build:
+    name: Build Debug APK
     runs-on: ubuntu-latest
-    
-    # Agar aapka code kisi subfolder mein hai (e.g., 'android')
-    defaults:
-      run:
-        working-directory: ./android   # Apne folder ka naam yahan likhein
 
     steps:
       - name: Checkout Code
@@ -18,8 +27,31 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
-      - name: Grant Execute Permission for Gradlew
-        run: chmod +x gradlew
+      # Step 1: Automatically find where 'gradlew' is located in the repository
+      - name: Locate Gradlew File
+        run: |
+          GRADLEW_PATH=$(find . -name gradlew -type f | head -n 1)
+          if [ -z "$GRADLEW_PATH" ]; then
+            echo "Error: gradlew file missing in the repository!"
+            exit 1
+          fi
+          PROJECT_DIR=$(dirname "$GRADLEW_PATH")
+          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
+          echo "Gradlew found at: $GRADLEW_PATH"
 
+      # Step 2: Grant permissions using the exact path found
+      - name: Grant Execute Permission for Gradlew
+        run: chmod +x "${{ env.PROJECT_DIR }}/gradlew"
+
+      # Step 3: Run Gradle build inside the project directory
       - name: Build Debug APK
-        run: ./gradlew assembleDebug
+        run: |
+          cd "${{ env.PROJECT_DIR }}"
+          ./gradlew assembleDebug --stacktrace
+
+      # Step 4: Upload generated APK as artifact
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Android-Debug-APK
+          path: '**/build/outputs/apk/debug/*.apk'
